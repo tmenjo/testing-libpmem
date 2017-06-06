@@ -1,0 +1,32 @@
+#                                               -*- Autoconf -*-
+# Process this file with autoconf to produce a configure script.
+
+AC_PREREQ([2.69])
+AC_INIT([testing-libpmem], [0.1])
+AC_CONFIG_SRCDIR([test/test_libpmem.c])
+
+AM_INIT_AUTOMAKE([-Wall -Werror foreign subdir-objects])
+
+PKG_CHECK_MODULES(CHECK, [check >= 0.9.4])
+
+# Checks for programs.
+AC_PROG_CC
+AC_PROG_INSTALL
+
+# Checks for libraries.
+AC_CHECK_LIB([pmem], [pmem_check_version])
+AC_CHECK_LIB([pmemlog], [pmemlog_check_version])
+
+# Checks for header files.
+AC_CHECK_HEADERS([stdlib.h unistd.h])
+
+# Checks for typedefs, structures, and compiler characteristics.
+AC_TYPE_SIZE_T
+
+# Checks for library functions.
+AC_FUNC_MALLOC
+AC_CHECK_FUNCS([memset setenv])
+
+AC_CONFIG_FILES([Makefile
+                 test/Makefile])
+AC_OUTPUT
