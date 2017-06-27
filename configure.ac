@@ -3,7 +3,7 @@
 
 AC_PREREQ([2.69])
 AC_INIT([testing-libpmem], [0.1])
-AC_CONFIG_SRCDIR([test/test_libpmem.c])
+AC_CONFIG_SRCDIR([test/pmem.c])
 
 AM_INIT_AUTOMAKE([-Wall -Werror foreign subdir-objects])
 
@@ -18,14 +18,17 @@ AC_CHECK_LIB([pmem], [pmem_check_version])
 AC_CHECK_LIB([pmemlog], [pmemlog_check_version])
 
 # Checks for header files.
-AC_CHECK_HEADERS([stdlib.h unistd.h])
+AC_CHECK_HEADERS([fcntl.h limits.h stdlib.h string.h unistd.h])
 
 # Checks for typedefs, structures, and compiler characteristics.
 AC_TYPE_SIZE_T
+AC_CHECK_MEMBERS([struct stat.st_rdev])
 
 # Checks for library functions.
+AC_FUNC_ERROR_AT_LINE
+AC_HEADER_MAJOR
 AC_FUNC_MALLOC
-AC_CHECK_FUNCS([memset setenv])
+AC_CHECK_FUNCS([memset realpath])
 
 AC_CONFIG_FILES([Makefile
                  test/Makefile])

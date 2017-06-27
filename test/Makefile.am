@@ -3,13 +3,12 @@ MAINTAINERCLEANFILES = Makefile.in
 AM_CFLAGS = -Wall -Wextra @CHECK_CFLAGS@
 LDADD = @CHECK_LIBS@
 
-TESTS = test_libpmem \
-	test_libpmemlog
+TESTS = test_pmem test_log
 
-check_PROGRAMS = $(TESTS)
+check_PROGRAMS = pmem log
 
-test_libpmem_SOURCES = test_libpmem.c
-test_libpmem_LDADD = -lpmem $(LDADD)
+pmem_SOURCES = pmem.c
+pmem_LDADD = -lpmem $(LDADD)
 
-test_libpmemlog_SOURCES = test_libpmemlog.c
-test_libpmemlog_LDADD = -lpmemlog -lpmem $(LDADD)
+log_SOURCES = log.c
+log_LDADD = -lpmemlog -lpmem $(LDADD)

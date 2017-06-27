@@ -1,0 +1,7 @@
+#!/bin/sh
+[ -x log ] || exit 1
+
+export LD_LIBRARY_PATH=/usr/lib/x86_64-linux-gnu/nvml_dbg
+export PMEM_LOG_LEVEL=3 PMEMLOG_LOG_LEVEL=3
+
+./log

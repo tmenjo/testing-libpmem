@@ -1,0 +1,15 @@
+#!/bin/sh
+[ -x pmem ] || exit 1
+
+export LD_LIBRARY_PATH=/usr/lib/x86_64-linux-gnu/nvml_dbg
+export PMEM_LOG_LEVEL=3
+
+ret=0
+./pmem
+if [ $? -ne 0 ] ; then ret=1 ; fi
+PMEM_IS_PMEM=0 ./pmem
+if [ $? -ne 0 ] ; then ret=1 ; fi
+PMEM_IS_PMEM=1 ./pmem
+if [ $? -ne 0 ] ; then ret=1 ; fi
+
+exit $ret
