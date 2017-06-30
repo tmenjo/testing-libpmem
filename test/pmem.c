@@ -1,3 +1,5 @@
+#include "config.h" /* should be included first */
+
 #include <check.h>
 #include <errno.h>
 #include <libpmem.h>
@@ -7,9 +9,7 @@
 #include <sys/stat.h>
 #include <unistd.h>
 
-#define success(actual) ck_assert_int_eq(0, (actual))
-#define error(expected) ck_assert_int_eq((expected), errno)
-#define cmpeq(actual) ck_assert_int_eq(0, (actual))
+#include "checkplus.h"
 
 #ifndef DIR_DAX
 #define DIR_DAX "/mnt/pmem0/tmp"
@@ -68,7 +68,7 @@ static void setup_once_device_dax(void)
 	char spath[PATH_MAX], npath[PATH_MAX];
 	snprintf(spath, PATH_MAX, "/sys/dev/char/%d:%d/subsystem", maj, min);
 	const char *const rpath = realpath(spath, npath);
-	cmpeq(strcmp("/sys/class/dax", rpath));
+	ck_assert_str_eq("/sys/class/dax", rpath);
 }
 
 START_TEST(is_pmem_dax_fs)
@@ -81,7 +81,7 @@ START_TEST(is_pmem_dax_fs)
 	void *const addr = pmem_map_file(
 		PATH_DAX_FILE, len, flags, 0600, &mapped_len, &is_pmem);
 
-	ck_assert(!!addr);
+	ck_assert_ptr_nonnull(addr);
 	ck_assert_uint_eq(len, mapped_len);
 	/*
 	 * PMEM_IS_PMEM_FORCE=1 implies is_pmem is true.
@@ -103,7 +103,7 @@ START_TEST(is_pmem_nondax_fs)
 	void *const addr = pmem_map_file(
 		PATH_NONDAX_FILE, len, flags, 0600, &mapped_len, &is_pmem);
 
-	ck_assert(!!addr);
+	ck_assert_ptr_nonnull(addr);
 	ck_assert_uint_eq(len, mapped_len);
 	/*
 	 * PMEM_IS_PMEM_FORCE=1 implies is_pmem is true even if non-DAX FS.
@@ -122,7 +122,7 @@ START_TEST(is_pmem_device_dax)
 	void *const addr = pmem_map_file(
 		PATH_DEVICE_DAX, 0, 0, 0600, &mapped_len, &is_pmem);
 
-	ck_assert(!!addr);
+	ck_assert_ptr_nonnull(addr);
 	ck_assert_uint_lt(0, mapped_len);
 	/* DO NOT care PMEM_IS_PMEM_FORCE. */
 	ck_assert(is_pmem);
@@ -139,7 +139,8 @@ START_TEST(pmem_map_file_len_EINVAL_device_dax)
 	 */
 	static const size_t len = 2*1024*1024;
 
-	ck_assert(!pmem_map_file(PATH_DEVICE_DAX, len, 0, 0600, NULL, NULL));
+	ck_assert_ptr_null(pmem_map_file(
+		PATH_DEVICE_DAX, len, 0, 0600, NULL, NULL));
 	error(EINVAL);
 }
 END_TEST
@@ -151,7 +152,8 @@ START_TEST(pmem_map_file_flags_EINVAL_device_dax)
 	 */
 	static const int flags = PMEM_FILE_CREATE|PMEM_FILE_EXCL;
 
-	ck_assert(!pmem_map_file(PATH_DEVICE_DAX, 0, flags, 0600, NULL, NULL));
+	ck_assert_ptr_null(pmem_map_file(
+		PATH_DEVICE_DAX, 0, flags, 0600, NULL, NULL));
 	error(EINVAL);
 }
 END_TEST

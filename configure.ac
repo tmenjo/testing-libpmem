@@ -4,10 +4,16 @@
 AC_PREREQ([2.69])
 AC_INIT([testing-libpmem], [0.1])
 AC_CONFIG_SRCDIR([test/pmem.c])
+AC_CONFIG_HEADERS([config.h])
 
 AM_INIT_AUTOMAKE([-Wall -Werror foreign subdir-objects])
 
 PKG_CHECK_MODULES(CHECK, [check >= 0.9.4])
+
+AH_TEMPLATE(HAVE_CHECK_0_11_0,
+            [Define to 1 if you have the libcheck 0.11.0 or later.])
+PKG_CHECK_MODULES(CHECK_0_11_0, [check >= 0.11.0],
+                  [AC_DEFINE([HAVE_CHECK_0_11_0])], [:])
 
 # Checks for programs.
 AC_PROG_CC

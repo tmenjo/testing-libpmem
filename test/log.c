@@ -1,3 +1,5 @@
+#include "config.h" /* should be included first */
+
 #include <check.h>
 #include <errno.h>
 #include <fcntl.h>
@@ -7,6 +9,8 @@
 #include <string.h>
 #include <sys/stat.h>
 #include <unistd.h>
+
+#include "checkplus.h"
 
 #ifndef DIR_DAX
 #define DIR_DAX "/mnt/pmem0/tmp"
@@ -18,13 +22,6 @@
 #define FILE_A "foo"
 #define FILE_B "bar"
 
-#define zero(actual) ck_assert_int_eq(0, (actual))
-#define cmpeq(actual) ck_assert_int_eq(0, (actual))
-#define success(actual) ck_assert_int_eq(0, (actual))
-#define failure(actual) ck_assert_int_eq(-1, (actual))
-#define opened(actual) ck_assert_int_ne(-1, (actual))
-#define error(expected) ck_assert_int_eq((expected), errno)
-
 static PMEMlogpool *p_ = NULL, *q_ = NULL;
 static void *v_ = NULL, *w_ = NULL;
 
@@ -34,11 +31,11 @@ void setup_once(void)
 	q_ = NULL;
 
 	v_ = malloc(PMEMLOG_MIN_POOL);
-	ck_assert(v_);
+	ck_assert_ptr_nonnull(v_);
 	memset(v_, 0x00, PMEMLOG_MIN_POOL);
 
 	w_ = malloc(PMEMLOG_MIN_POOL);
-	ck_assert(w_);
+	ck_assert_ptr_nonnull(w_);
 	memset(w_, 0xFF, PMEMLOG_MIN_POOL);
 }
 
@@ -89,11 +86,11 @@ void teardown(void)
 START_TEST(test_create_eexist)
 {
 	p_ = pmemlog_create(FILE_A, PMEMLOG_MIN_POOL, 0600);
-	ck_assert(p_);
+	ck_assert_ptr_nonnull(p_);
 	pmemlog_close(p_);
 	p_ = NULL;
 
-	ck_assert(!pmemlog_create(FILE_A, PMEMLOG_MIN_POOL, 0600));
+	ck_assert_ptr_null(pmemlog_create(FILE_A, PMEMLOG_MIN_POOL, 0600));
 	error(EEXIST);
 }
 END_TEST
@@ -104,7 +101,7 @@ START_TEST(test_create_eexist2)
 	opened(fd);
 	success(close(fd));
 
-	ck_assert(!pmemlog_create(FILE_A, PMEMLOG_MIN_POOL, 0600));
+	ck_assert_ptr_null(pmemlog_create(FILE_A, PMEMLOG_MIN_POOL, 0600));
 	error(EEXIST);
 }
 END_TEST
@@ -115,7 +112,7 @@ END_TEST
 START_TEST(test_create)
 {
 	p_ = pmemlog_create(FILE_A, PMEMLOG_MIN_POOL, 0600);
-	ck_assert(p_);
+	ck_assert_ptr_nonnull(p_);
 
 	/* pmemlog_nbyte() returns # bytes available for user */
 	const size_t size = pmemlog_nbyte(p_);
@@ -125,7 +122,7 @@ START_TEST(test_create)
 	ck_assert_uint_eq(PMEMLOG_MIN_POOL, sb.st_size);
 
 	/* pointer is set at zero first */
-	zero(pmemlog_tell(p_));
+	ck_assert_int_eq(0, pmemlog_tell(p_));
 
 	/* fill whole the pmemlog file */
 	success(pmemlog_append(p_, v_, size));
@@ -140,7 +137,7 @@ START_TEST(test_create)
 
 	/* pmemlog_rewind() sets the pointer to zero */
 	pmemlog_rewind(p_);
-	zero(pmemlog_tell(p_));
+	ck_assert_int_eq(0, pmemlog_tell(p_));
 	ck_assert_uint_eq(size, pmemlog_nbyte(p_));
 }
 END_TEST
@@ -151,16 +148,16 @@ END_TEST
 START_TEST(test_header)
 {
 	p_ = pmemlog_create(FILE_A, PMEMLOG_MIN_POOL, 0600);
-	ck_assert(p_);
+	ck_assert_ptr_nonnull(p_);
 	pmemlog_close(p_);
 	p_ = NULL;
 
 	FILE *const fp = fopen(FILE_A, "r+b");
-	ck_assert(fp);
+	ck_assert_ptr_nonnull(fp);
 
 	char header[8];
 	ck_assert_uint_eq(8, fread(header, sizeof(char), 8, fp));
-	cmpeq(memcmp("PMEMLOG", header, 8));
+	ck_assert_mem_eq("PMEMLOG", header, 8);
 
 	success(fclose(fp));
 }
@@ -171,7 +168,7 @@ END_TEST
  ******************************************************************************/
 START_TEST(test_open_enoent)
 {
-	ck_assert(!pmemlog_open(FILE_A));
+	ck_assert_ptr_null(pmemlog_open(FILE_A));
 	error(ENOENT);
 }
 END_TEST
@@ -182,13 +179,13 @@ END_TEST
 START_TEST(test_open)
 {
 	p_ = pmemlog_create(FILE_A, PMEMLOG_MIN_POOL, 0600);
-	ck_assert(p_);
+	ck_assert_ptr_nonnull(p_);
 
 	const size_t size = pmemlog_nbyte(p_);
 	ck_assert_uint_lt(0, size);
 	ck_assert_uint_lt(size, PMEMLOG_MIN_POOL);
 
-	zero(pmemlog_tell(p_));
+	ck_assert_int_eq(0, pmemlog_tell(p_));
 
 	/* fill half of the pmemlog file */
 	const size_t half = size / 2;
@@ -198,7 +195,7 @@ START_TEST(test_open)
 	/* re-open pmemlog file; pointer stays */
 	pmemlog_close(p_);
 	p_ = pmemlog_open(FILE_A);
-	ck_assert(p_);
+	ck_assert_ptr_nonnull(p_);
 	ck_assert_int_eq((long long)half, pmemlog_tell(p_));
 
 	/* pmemlog_append is atomic; if it fails, pointer stays */
@@ -208,11 +205,11 @@ START_TEST(test_open)
 
 	/* rewind the pointer then re-open pmemlog file; pointer stays */
 	pmemlog_rewind(p_);
-	zero(pmemlog_tell(p_));
+	ck_assert_int_eq(0, pmemlog_tell(p_));
 	pmemlog_close(p_);
 	p_ = pmemlog_open(FILE_A);
-	ck_assert(p_);
-	zero(pmemlog_tell(p_));
+	ck_assert_ptr_nonnull(p_);
+	ck_assert_int_eq(0, pmemlog_tell(p_));
 }
 END_TEST
 
@@ -222,7 +219,7 @@ END_TEST
 START_TEST(test_unlink)
 {
 	p_ = pmemlog_create(FILE_A, PMEMLOG_MIN_POOL, 0600);
-	ck_assert(p_);
+	ck_assert_ptr_nonnull(p_);
 
 	success(access(FILE_A, F_OK));
 	success(unlink(FILE_A));
@@ -240,11 +237,11 @@ int assert_walk_test_rename(const void *, size_t, void *);
 START_TEST(test_rename)
 {
 	p_ = pmemlog_create(FILE_A, PMEMLOG_MIN_POOL, 0600);
-	ck_assert(p_);
+	ck_assert_ptr_nonnull(p_);
 	success(pmemlog_append(p_, v_, 8192)); /* 8192-byte 0x00 */
 
 	q_ = pmemlog_create(FILE_B, PMEMLOG_MIN_POOL, 0600);
-	ck_assert(q_);
+	ck_assert_ptr_nonnull(q_);
 	success(pmemlog_append(q_, w_, 4096)); /* 4096-byte 0xFF */
 
 	/*
@@ -273,20 +270,20 @@ END_TEST
 
 int assert_walk_test_rename(const void *buf, size_t len, void *arg)
 {
-	ck_assert(!arg);
+	ck_assert_ptr_null(arg);
 	ck_assert_uint_eq(4096, len); /* whole the content */
-	cmpeq(memcmp(w_, buf, len)); /* 4096-byte 0xFF */
+	ck_assert_mem_eq(w_, buf, len); /* 4096-byte 0xFF */
 	return 0; /* terminate the walk */
 }
 
 START_TEST(test_rename2)
 {
 	p_ = pmemlog_create(FILE_A, PMEMLOG_MIN_POOL, 0600);
-	ck_assert(p_);
+	ck_assert_ptr_nonnull(p_);
 	success(pmemlog_append(p_, v_, 8192));
 
 	q_ = pmemlog_create(FILE_B, PMEMLOG_MIN_POOL, 0600);
-	ck_assert(q_);
+	ck_assert_ptr_nonnull(q_);
 	success(pmemlog_append(q_, w_, 4096));
 
 	/* re-open FILE_A as plain file */
