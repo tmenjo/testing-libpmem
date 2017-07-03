@@ -25,7 +25,7 @@
 static PMEMlogpool *p_ = NULL, *q_ = NULL;
 static void *v_ = NULL, *w_ = NULL;
 
-void setup_once(void)
+static void setup_once(void)
 {
 	p_ = NULL;
 	q_ = NULL;
@@ -39,25 +39,25 @@ void setup_once(void)
 	memset(w_, 0xFF, PMEMLOG_MIN_POOL);
 }
 
-void setup_once_daxfs(void)
+static void setup_once_daxfs(void)
 {
 	setup_once();
 	success(chdir(DIR_DAX));
 }
 
-void setup_once_nondaxfs(void)
+static void setup_once_nondaxfs(void)
 {
 	setup_once();
 	success(chdir(DIR_NONDAX));
 }
 
-void teardown_once(void)
+static void teardown_once(void)
 {
 	free(v_);
 	free(w_);
 }
 
-void setup(void)
+static void setup(void)
 {
 	unlink(FILE_A); /* DO NOT assert */
 	failure(access(FILE_A, F_OK));
@@ -68,7 +68,7 @@ void setup(void)
 	error(ENOENT);
 }
 
-void teardown(void)
+static void teardown(void)
 {
 	if (p_) {
 		pmemlog_close(p_);
