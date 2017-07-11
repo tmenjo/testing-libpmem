@@ -1,0 +1,40 @@
+#!/bin/sh
+export LANG=C LC_ALL=C
+set -xue
+
+which ndctl
+which jq
+
+safe_umount() {
+	local dev="$1"
+	if mount -l | grep -q "^$dev" ; then
+		sudo umount "$dev"
+	fi
+}
+
+create_pmem_namespace() {
+	local ns="$1"
+	shift
+	sudo ndctl create-namespace -f -e "$ns" -t pmem -m "$@"
+}
+
+prepare_ext4_dax() {
+	local dev="$1"
+	local mnt="$2"
+	sudo mkfs.ext4 -F "$dev"
+	sudo mount -o dax "$dev" "$mnt"
+}
+
+safe_umount /dev/pmem0
+create_pmem_namespace namespace0.0 memory -M dev
+sudo mkdir -p /mnt/pmem0
+prepare_ext4_dax /dev/pmem0 /mnt/pmem0
+sudo mkdir /mnt/pmem0/tmp
+sudo chmod 777 /mnt/pmem0/tmp
+
+safe_umount /dev/pmem1
+create_pmem_namespace namespace1.0 dax
+[ -c /dev/dax1.0 ]
+sudo chmod 666 /dev/dax1.0
+
+echo OK
