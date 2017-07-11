@@ -1,0 +1,6 @@
+#!/bin/sh
+export LANG=C LC_ALL=C
+export PMEM_IS_PMEM_FORCE=1
+for i in 0 1 2 3 4 ; do
+	numactl --cpunodebind=0 --membind=0 ./perf "$@"
+done
