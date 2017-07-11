@@ -3,7 +3,6 @@ export LANG=C LC_ALL=C
 set -xue
 
 which ndctl
-which jq
 
 safe_umount() {
 	local dev="$1"
