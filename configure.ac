@@ -21,6 +21,7 @@ AC_PROG_INSTALL
 
 # Checks for libraries.
 AC_CHECK_LIB([pmem], [pmem_check_version])
+AC_CHECK_LIB([pmemblk], [pmemblk_check_version])
 AC_CHECK_LIB([pmemlog], [pmemlog_check_version])
 
 # Checks for header files.

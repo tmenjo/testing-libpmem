@@ -3,9 +3,11 @@ MAINTAINERCLEANFILES = Makefile.in
 AM_CFLAGS = -Wall -Wextra -Werror @CHECK_CFLAGS@
 LDADD = @CHECK_LIBS@
 
-TESTS = test_pmem test_log
+TESTS = test_blk test_pmem test_log
 
-check_PROGRAMS = pmem log
+check_PROGRAMS = blk pmem log
+
+blk_SOURCES = blk.c
 
 pmem_SOURCES = pmem.c
 
