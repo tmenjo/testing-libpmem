@@ -2,3 +2,4 @@
 /pmem
 /log
 /perf
+/test_fast_memcpy
